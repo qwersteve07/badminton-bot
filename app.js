@@ -35,16 +35,17 @@ require("dotenv").config();
 
   // wait for Thursday
   let currentDate = new Date().toDateString();
-  while (currentDate.indexOf("Thu") === -1) {
+  while (currentDate.indexOf("Fri") === -1) {
     currentDate = new Date().toDateString();
   }
 
   // TODO: 改為自動抓取時間
-  const month = "01";
-  const date = "18";
-  const times = ["20", "21"];
 
   await page.evaluate(async () => {
+    const month = "01";
+    const date = "17";
+    const times = ["06", "07"];
+
     await Promise.all(
       times.map((time) =>
         fetch(
