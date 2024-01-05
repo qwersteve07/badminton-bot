@@ -2,6 +2,7 @@
   "name": "badminton-bot",
   "version": "1.0.0",
   "main": "index.js",
+  "type":"module",
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.40.1",

@@ -1,59 +1,79 @@
-const { chromium } = require("playwright");
-require("dotenv").config();
+import { chromium } from "playwright";
+import { getNextTargetDate } from "./utils/get-date.js";
+import { sendLineNotify } from "./utils/line-notify.js";
+import "dotenv/config";
+
+const pickTimes = ["06"];
+const nextTargetDate = getNextTargetDate();
+const CJCFurl = "https://www.cjcf.com.tw";
 
 (async () => {
-  // Launch a new browser instance
   const browser = await chromium.launch({ headless: false });
-  // Create a new browser context
   const context = await browser.newContext();
-  // Create a new page within the context
   const page = await context.newPage();
-
-  // Navigate to a website
-  const CJCFurl =
-    "https://www.cjcf.com.tw/jj01.aspx?module=login_page&files=login&PT=1";
-  await page.goto(CJCFurl);
-
-  // clear alert
-  await page.locator('button:has-text("OK")').click();
-
-  const username = process.env.USERNAME;
-  const password = process.env.PASSWORD;
-
-  await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
-  await page.locator("id=loginpw").fill(password);
+  // Navigate to login
+  await page.goto(`${CJCFurl}/jj01.aspx?module=login_page&files=login&PT=1`);
+  // await page.locator('button:has-text("OK")').click();
 
   // login
-  await page.evaluate(() => {
-    const button = document.createElement("button");
-    button.id = "customSubmit";
-    button.textContent = "submit";
-    button.onclick = () => DoSubmit();
-    document.body.appendChild(button);
-  });
-  await page.locator("id=customSubmit").click();
+  const username = process.env.USERNAME;
+  const password = process.env.PASSWORD;
+  await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
+  await page.locator("id=loginpw").fill(password);
+  await page.evaluate(() => window.DoSubmit())  
+  await page.waitForSelector('img[title=我的訂單]')
 
-  // wait for Thursday
-  let currentDate = new Date().toDateString();
-  while (currentDate.indexOf("Fri") === -1) {
-    currentDate = new Date().toDateString();
-  }
+	// wait for midnight
+	let isAvailable = new Date().toTimeString().includes("00:00:00");
+	while (!isAvailable) {
+		isAvailable = new Date().toTimeString().includes("00:00:00");
+	}
 
-  // TODO: 改為自動抓取時間
+	// pick place
+	const pickPlaceResponse = await page.evaluate(
+		async ({ pickTimes, date, CJCFurl }) => {
+			return await Promise.all(
+				pickTimes.map((time) =>
+					fetch(
+						`${CJCFurl}/jj01.aspx?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=${date}&Qpid=1112&QTime=${time}`
+					).then((res) => res.text())
+				)
+			);
+		},
+		{ pickTimes, date: nextTargetDate, CJCFurl }
+	);
 
-  await page.evaluate(async () => {
-    const month = "01";
-    const date = "17";
-    const times = ["06", "07"];
+	// get pick place result path
+	const pickPlaceResultPath = pickPlaceResponse.map((res) => {
+		const path = res.substring(
+			res.indexOf("../../..") + 8,
+			res.indexOf("' </script>")
+		);
+		return `${CJCFurl}${path}`;
+	});
 
-    await Promise.all(
-      times.map((time) =>
-        fetch(
-          `https://www.cjcf.com.tw/jj01.aspx?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=2024/${month}/${date}&Qpid=1112&QTime=${time}`
-        )
-      )
-    );
-  });
+	// get pick place result
+	const pickPlaceResult = await page.evaluate(
+		async ({ pickPlaceResultPath }) => {
+			return await Promise.all(
+				pickPlaceResultPath.map((path) =>
+					fetch(path).then((res) => res.text())
+				)
+			);
+		},
+		{ pickPlaceResultPath }
+	);
 
-  await browser.close();
+	// send notify
+	pickPlaceResult.forEach(async (res, index) => {
+		if (res.indexOf("預約成功") !== -1) {
+			sendLineNotify(
+				`預約成功🏸🏸🏸 \t\n日期: ${nextTargetDate}\t\n時段: ${pickTimes[index]}`
+			);
+		} else {
+			sendLineNotify(`預約失敗`);
+		}
+	});
+
+	await browser.close();
 })();
