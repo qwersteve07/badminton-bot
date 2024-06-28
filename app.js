@@ -5,15 +5,17 @@ import "dotenv/config";
 
 const pickTimes = ["20", "21"];
 const nextTargetDate = getNextTargetDate();
-const CJCFurl = "https://www.cjcf.com.tw";
+const sportsCenterUrl = "https://www.cjcf.com.tw/";
+const sportsCenterHomePath = "jj01.aspx";
 
 (async () => {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
   // Navigate to login
-  await page.goto(`${CJCFurl}/jj01.aspx?module=login_page&files=login&PT=1`);
-  // await page.locator('button:has-text("OK")').click();
+  await page.goto(
+    `${sportsCenterUrl}${sportsCenterHomePath}?module=login_page&files=login&PT=1`
+  );
 
   // login
   const username = process.env.USERNAME;
@@ -31,16 +33,16 @@ const CJCFurl = "https://www.cjcf.com.tw";
 
   // pick place
   const pickPlaceResponse = await page.evaluate(
-    async ({ pickTimes, date, CJCFurl }) => {
+    async ({ pickTimes, date, sportsCenterUrl, sportsCenterHomePath }) => {
       return await Promise.all(
         pickTimes.map((time) =>
           fetch(
-            `${CJCFurl}/jj01.aspx?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=${date}&Qpid=1112&QTime=${time}`
+            `${sportsCenterUrl}${sportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=${date}&Qpid=1112&QTime=${time}`
           ).then((res) => res.text())
         )
       );
     },
-    { pickTimes, date: nextTargetDate, CJCFurl }
+    { pickTimes, date: nextTargetDate, sportsCenterUrl, sportsCenterHomePath }
   );
 
   // get pick place result path
@@ -49,7 +51,7 @@ const CJCFurl = "https://www.cjcf.com.tw";
       res.indexOf("../../..") + 8,
       res.indexOf("' </script>")
     );
-    return `${CJCFurl}${path}`;
+    return `${sportsCenterUrl}${path}`;
   });
 
   // get pick place result
