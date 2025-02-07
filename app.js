@@ -5,8 +5,14 @@ import "dotenv/config";
 
 const pickTimes = ["20", "21"];
 const nextTargetDate = getNextTargetDate();
-const sportsCenterUrl = "https://www.cjcf.com.tw/";
-const sportsCenterHomePath = "jj01.aspx";
+// 中正運動中心
+// const zhongZhenSportsCenterUrl = "https://www.cjcf.com.tw/";
+// const zhongZhenSportsCenterHomePath = "jj01.aspx";
+// 中山運動中心
+const zhongShanSportsCenterUrl = "https://scr.cyc.org.tw/";
+const zhongShanSportsCenterHomePath = "tp01.aspx";
+const targetSportsCenterUrl = zhongShanSportsCenterUrl;
+const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
 
 (async () => {
   const browser = await chromium.launch({ headless: false });
@@ -14,7 +20,7 @@ const sportsCenterHomePath = "jj01.aspx";
   const page = await context.newPage();
   // Navigate to login
   await page.goto(
-    `${sportsCenterUrl}${sportsCenterHomePath}?module=login_page&files=login&PT=1`
+    `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=login_page&files=login&PT=1`
   );
 
   // login
@@ -35,30 +41,35 @@ const sportsCenterHomePath = "jj01.aspx";
   const pickPlaceResponse = await page.evaluate(
     async ({ pickTimes, date, sportsCenterUrl, sportsCenterHomePath }) => {
       return await Promise.all(
-        pickTimes.map((time) =>
+        pickTimes.map(time =>
           fetch(
             `${sportsCenterUrl}${sportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=${date}&Qpid=1112&QTime=${time}`
-          ).then((res) => res.text())
+          ).then(res => res.text())
         )
       );
     },
-    { pickTimes, date: nextTargetDate, sportsCenterUrl, sportsCenterHomePath }
+    {
+      pickTimes,
+      date: nextTargetDate,
+      targetSportsCenterUrl,
+      targetSportsCenterHomePath,
+    }
   );
 
   // get pick place result path
-  const pickPlaceResultPath = pickPlaceResponse.map((res) => {
+  const pickPlaceResultPath = pickPlaceResponse.map(res => {
     const path = res.substring(
       res.indexOf("../../..") + 8,
       res.indexOf("' </script>")
     );
-    return `${sportsCenterUrl}${path}`;
+    return `${targetSportsCenterUrl}${path}`;
   });
 
   // get pick place result
   const pickPlaceResult = await page.evaluate(
     async ({ pickPlaceResultPath }) => {
       return await Promise.all(
-        pickPlaceResultPath.map((path) => fetch(path).then((res) => res.text()))
+        pickPlaceResultPath.map(path => fetch(path).then(res => res.text()))
       );
     },
     { pickPlaceResultPath }
