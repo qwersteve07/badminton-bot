@@ -1,21 +1,18 @@
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 import { getNextTargetDate } from "./utils/get-date.js";
 import { sendLineNotify } from "./utils/line-notify.js";
 import "dotenv/config";
 
 const pickTimes = ["20", "21"];
 const nextTargetDate = getNextTargetDate();
-// 中正運動中心
-// const zhongZhenSportsCenterUrl = "https://www.cjcf.com.tw/";
-// const zhongZhenSportsCenterHomePath = "jj01.aspx";
 // 中山運動中心
 const zhongShanSportsCenterUrl = "https://scr.cyc.org.tw/";
 const zhongShanSportsCenterHomePath = "tp01.aspx";
 const targetSportsCenterUrl = zhongShanSportsCenterUrl;
 const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
 
-(async () => {
-  const browser = await chromium.launch({ headless: false });
+export const run = async () => {
+  const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
   // Navigate to login
@@ -24,7 +21,7 @@ const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
   );
 
   // login
-  const username = process.env.USERNAME;
+  const username = process.env.USERNAMES;
   const password = process.env.PASSWORD;
   await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
   await page.locator("id=loginpw").fill(password);
@@ -39,13 +36,18 @@ const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
 
   // pick place
   const pickPlaceResponse = await page.evaluate(
-    async ({ pickTimes, date, sportsCenterUrl, sportsCenterHomePath }) => {
+    async ({
+      pickTimes,
+      date,
+      targetSportsCenterUrl,
+      targetSportsCenterHomePath,
+    }) => {
       return await Promise.all(
-        pickTimes.map(time =>
+        pickTimes.map(time => {
           fetch(
-            `${sportsCenterUrl}${sportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&PT=1&D=${date}&Qpid=1112&QTime=${time}`
-          ).then(res => res.text())
-        )
+            `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&QPid=84&PT=1&D=${date}&QTime=${time}`
+          ).then(res => res.text());
+        })
       );
     },
     {
@@ -87,4 +89,4 @@ const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
   });
 
   await browser.close();
-})();
+};
