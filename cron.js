@@ -1,7 +1,12 @@
-import cron from "node-cron";
+import { CronJob } from "cron";
 import { run } from "./app.js";
 
-cron.schedule("59 23 * * *", () => {
-  console.log("running a task at 11:59 every day");
-  run();
-});
+new CronJob(
+	"0 59 23 * * * *", // cronTime
+	function () {
+		run();
+	}, // onTick
+	null, // onComplete
+	true, // start
+);
+//
