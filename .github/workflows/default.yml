@@ -1,26 +1,26 @@
 name: default
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
 jobs:
-  build-files:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    build-files:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
 
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+            - uses: webfactory/ssh-agent@v0.9.0
+              with:
+                  ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Set up SSH key
-        run: ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
+            - name: Set up SSH key
+              run: ssh-keyscan -H ${{ secrets.DROPLET_IP }} >> ~/.ssh/known_hosts
 
-      - name: SSH into Server and git pull
-        run: |
-          ssh  ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "cd badminton-bot && git pull"
+            - name: SSH into Server and git pull
+              run: |
+                  ssh  ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "cd badminton-bot && git pull"
 
-      - name: run service
-        run: ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "pm2 restart 1"
+            - name: run service
+              run: ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "pm2 restart 0"
