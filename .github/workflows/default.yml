@@ -23,4 +23,4 @@ jobs:
                   ssh  ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "cd badminton-bot && git pull"
 
             - name: run service
-              run: ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "pm2 restart 0"
+              run: ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "pm2 restart cron"
