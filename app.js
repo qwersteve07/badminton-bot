@@ -19,6 +19,8 @@ export const run = async () => {
 		`${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=login_page&files=login&PT=1`,
 	);
 
+	console.log(`${nextTargetDate} start!`);
+
 	// login
 	const username = process.env.USERNAMES;
 	const password = process.env.PASSWORD;
@@ -27,14 +29,19 @@ export const run = async () => {
 	await page.evaluate(() => window.DoSubmit());
 	await page.waitForSelector("img[title=我的訂單]");
 
+	console.log("is logged in");
+	console.log("waiting for midnight...");
+
 	// wait for midnight
 	let isAvailable = new Date().toTimeString().includes("23:59:59");
 	while (!isAvailable) {
 		isAvailable = new Date().toTimeString().includes("23:59:59");
 	}
 
+	console.log("go!");
+
 	// pick place
-	await page.evaluate(
+	const pickPlaceResponse = await page.evaluate(
 		async ({
 			pickTimes,
 			date,
@@ -57,7 +64,35 @@ export const run = async () => {
 		},
 	);
 
+	// get pick place result path
+	const pickPlaceResultPath = pickPlaceResponse.map((res) => {
+		const path = res.substring(
+			res.indexOf("../../..") + 8,
+			res.indexOf("' </script>"),
+		);
+		return `${targetSportsCenterUrl}${path}`;
+	});
+
+	// get pick place result
+	const pickPlaceResult = await page.evaluate(
+		async ({ pickPlaceResultPath }) => {
+			return await Promise.all(
+				pickPlaceResultPath.map((path) =>
+					fetch(path).then((res) => res.text()),
+				),
+			);
+		},
+		{ pickPlaceResultPath },
+	);
+
+	pickPlaceResult.forEach(async (res, index) => {
+		if (res.indexOf("預約成功") !== -1) {
+			console.log(
+				`預約成功🏸🏸🏸 \t\n日期: ${nextTargetDate}\t\n時段: ${pickTimes[index]}`,
+			);
+		} else {
+			console.log(`預約失敗`);
+		}
+	});
 	await browser.close();
 };
-
-run();
