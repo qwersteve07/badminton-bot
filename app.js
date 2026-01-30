@@ -22,7 +22,7 @@ export const run = async () => {
 	console.log(`${nextTargetDate} start!`);
 
 	// login
-	const username = process.env.USERNAMES;
+	const username = process.env.USERNAME;
 	const password = process.env.PASSWORD;
 	await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
 	await page.locator("id=loginpw").fill(password);
@@ -33,10 +33,10 @@ export const run = async () => {
 	console.log("waiting for midnight...");
 
 	// wait for midnight
-	let isAvailable = new Date().toTimeString().includes("23:59:59");
-	while (!isAvailable) {
-		isAvailable = new Date().toTimeString().includes("23:59:59");
-	}
+	// let isAvailable = new Date().toTimeString().includes("23:59:59");
+	// while (!isAvailable) {
+	// 	isAvailable = new Date().toTimeString().includes("23:59:59");
+	// }
 
 	console.log("go!");
 
