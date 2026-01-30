@@ -1,5 +1,6 @@
 import { chromium } from "@playwright/test";
 import { getNextTargetDate } from "./utils/get-date.js";
+import { sendLineMessage } from "./utils/line-message.js";
 import "dotenv/config";
 
 const pickTimes = ["20", "21"];
@@ -13,6 +14,9 @@ const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
 export const run = async () => {
 	const browser = await chromium.launch();
 	const context = await browser.newContext();
+
+	console.log("browser launched");
+
 	const page = await context.newPage();
 	// Navigate to login
 	await page.goto(
@@ -33,11 +37,12 @@ export const run = async () => {
 	console.log("waiting for midnight...");
 
 	// wait for midnight
-	// let isAvailable = new Date().toTimeString().includes("23:59:59");
+	let isAvailable = new Date().toTimeString().includes("23:59:59");
 	// while (!isAvailable) {
 	// 	isAvailable = new Date().toTimeString().includes("23:59:59");
 	// }
 
+	console.log(`right now is ${new Date().toTimeString()}`);
 	console.log("go!");
 
 	// pick place
@@ -87,11 +92,11 @@ export const run = async () => {
 
 	pickPlaceResult.forEach(async (res, index) => {
 		if (res.indexOf("預約成功") !== -1) {
-			console.log(
+			sendLineMessage(
 				`預約成功🏸🏸🏸 \t\n日期: ${nextTargetDate}\t\n時段: ${pickTimes[index]}`,
 			);
 		} else {
-			console.log(`預約失敗`);
+			sendLineMessage(`預約失敗`);
 		}
 	});
 	await browser.close();
