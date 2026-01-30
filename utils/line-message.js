@@ -31,5 +31,3 @@ export const sendLineMessage = async (message) => {
 		console.log(e);
 	}
 };
-
-sendLineMessage("hello");
