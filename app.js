@@ -38,9 +38,9 @@ export const run = async () => {
 
 	// wait for midnight
 	let isAvailable = new Date().toTimeString().includes("23:59:59");
-	// while (!isAvailable) {
-	// 	isAvailable = new Date().toTimeString().includes("23:59:59");
-	// }
+	while (!isAvailable) {
+		isAvailable = new Date().toTimeString().includes("23:59:59");
+	}
 
 	console.log(`right now is ${new Date().toTimeString()}`);
 	console.log("go!");
