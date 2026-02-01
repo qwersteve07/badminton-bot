@@ -6,10 +6,14 @@ import "dotenv/config";
 const pickTimes = ["20", "21"];
 const nextTargetDate = getNextTargetDate();
 // 中山運動中心
-const zhongShanSportsCenterUrl = "https://scr.cyc.org.tw/";
-const zhongShanSportsCenterHomePath = "tp01.aspx";
-const targetSportsCenterUrl = zhongShanSportsCenterUrl;
-const targetSportsCenterHomePath = zhongShanSportsCenterHomePath;
+// const zhongShanSportsCenterUrl = "https://scr.cyc.org.tw/";
+// const zhongShanSportsCenterHomePath = "tp01.aspx";
+// 中正運動中心
+const zhongZhenSportsCenterUrl = "https://bwd.xuanen.com.tw/";
+const zhongZhenSportsCenterHomePath = "wd27.aspx";
+
+const targetSportsCenterUrl = zhongZhenSportsCenterUrl;
+const targetSportsCenterHomePath = zhongZhenSportsCenterHomePath;
 
 export const run = async () => {
   try {
@@ -38,10 +42,10 @@ export const run = async () => {
     console.log("waiting for midnight...");
 
     // wait for midnight
-    let isAvailable = new Date().toTimeString().includes("23:59:59");
-    while (!isAvailable) {
-      isAvailable = new Date().toTimeString().includes("23:59:59");
-    }
+    // let isAvailable = new Date().toTimeString().includes("23:59:59");
+    // while (!isAvailable) {
+    //   isAvailable = new Date().toTimeString().includes("23:59:59");
+    // }
 
     console.log(`right now is ${new Date().toTimeString()}`);
     console.log("go!");
@@ -57,7 +61,7 @@ export const run = async () => {
         return await Promise.all(
           pickTimes.map(async (time) => {
             return fetch(
-              `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&QPid=84&PT=1&D=${date}&QTime=${time}`,
+              `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&QPid=1196&PT=1&D=${date}&QTime=${time}`,
             ).then((res) => res.text());
           }),
         );

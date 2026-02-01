@@ -3,7 +3,7 @@ export const getNextTargetDate = () => {
   // 取得目前日期
   let today = new Date();
   let targetDate = new Date(today);
-  targetDate.setDate(targetDate.getDate() + 14);
+  targetDate.setDate(targetDate.getDate() + 7);
 
   let year = targetDate.getFullYear();
   let month = targetDate.getMonth() + 1;
