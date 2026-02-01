@@ -42,12 +42,12 @@ export const run = async () => {
     console.log("waiting for midnight...");
 
     // wait for midnight
-    // let isAvailable = new Date().toTimeString().includes("23:59:59");
-    // while (!isAvailable) {
-    //   isAvailable = new Date().toTimeString().includes("23:59:59");
-    // }
+    let isAvailable = new Date().toTimeString().includes("59:59");
+    while (!isAvailable) {
+      isAvailable = new Date().toTimeString().includes("59:59");
+    }
 
-    console.log(`right now is ${new Date().toTimeString()}`);
+    console.log(`right now is ${new Date().toISOString()}`);
     console.log("go!");
 
     // pick place
