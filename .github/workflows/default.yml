@@ -20,7 +20,7 @@ jobs:
 
             - name: SSH into Server and git pull
               run: |
-                  ssh  ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "cd badminton-bot && git pull"
+                  ssh  ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "cd badminton-bot && git pull && npm install"
 
             - name: run service
               run: ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} "pm2 restart cron"
