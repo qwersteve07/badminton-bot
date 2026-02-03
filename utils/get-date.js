@@ -7,7 +7,6 @@ dayjs.extend(timezone);
 // 取得下週時間
 export const getNextTargetDate = () => {
 	// 取得目前日期
-	let today = dayjs();
-	let targetDate = dayjs().add(7, "d");
-	return targetDate.format("YYYY/MM/DD");
+	console.log(dayjs().format());
+	return dayjs().add(7, "d").format("YYYY/MM/DD");
 };
