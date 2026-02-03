@@ -11,6 +11,7 @@
 	"scripts": {},
 	"dependencies": {
 		"cron": "^4.4.0",
+		"dayjs": "^1.11.19",
 		"dotenv": "^16.3.1",
 		"node-fetch": "^3.3.2"
 	}
