@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { run } from "./app.js";
 
 new CronJob(
-	"0 59 23 * * *",
+	"0 43 10 * * *",
 	function () {
 		run();
 	},
