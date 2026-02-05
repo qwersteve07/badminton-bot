@@ -1,5 +1,5 @@
 import { chromium } from "@playwright/test";
-import { getNextTargetDate } from "./utils/get-date.js";
+import { getNextTargetDate, getToday } from "./utils/get-date.js";
 import { sendLineMessage } from "./utils/line-message.js";
 import "dotenv/config";
 
@@ -16,96 +16,98 @@ const targetSportsCenterUrl = zhongZhenSportsCenterUrl;
 const targetSportsCenterHomePath = zhongZhenSportsCenterHomePath;
 
 export const run = async () => {
-  try {
-    const browser = await chromium.launch();
-    const context = await browser.newContext();
+	try {
+		const browser = await chromium.launch();
+		const context = await browser.newContext();
 
-    console.log("browser launched");
+		console.log("-------browser launched-------");
+		console.log(`today is ${getToday()}`);
+		console.log(`going to vie on ${nextTargetDate}...`);
 
-    const page = await context.newPage();
-    // Navigate to login
-    await page.goto(
-      `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=login_page&files=login&PT=1`,
-    );
+		const page = await context.newPage();
+		// Navigate to login
+		await page.goto(
+			`${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=login_page&files=login&PT=1`,
+		);
 
-    console.log(`${nextTargetDate} start!`);
+		// login
+		const username = process.env.USERNAME;
+		const password = process.env.PASSWORD;
+		await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
+		await page.locator("id=loginpw").fill(password);
+		await page.evaluate(() => window.DoSubmit());
+		await page.waitForSelector("img[title=我的訂單]");
 
-    // login
-    const username = process.env.USERNAME;
-    const password = process.env.PASSWORD;
-    await page.locator("id=ContentPlaceHolder1_loginid").fill(username);
-    await page.locator("id=loginpw").fill(password);
-    await page.evaluate(() => window.DoSubmit());
-    await page.waitForSelector("img[title=我的訂單]");
+		console.log("is logged in");
+		console.log("waiting for midnight...");
 
-    console.log("is logged in");
-    console.log("waiting for midnight...");
+		// wait for midnight
+		let isAvailable = new Date().toTimeString().includes("59:59");
+		while (!isAvailable) {
+			isAvailable = new Date().toTimeString().includes("59:59");
+		}
 
-    // wait for midnight
-    let isAvailable = new Date().toTimeString().includes("59:59");
-    while (!isAvailable) {
-      isAvailable = new Date().toTimeString().includes("59:59");
-    }
+		console.log(`GO!`);
+		console.time("Used Time");
 
-    console.log(`right now is ${new Date().toISOString()}`);
-    console.log("go!");
+		// pick place
+		const pickPlaceResponse = await page.evaluate(
+			async ({
+				pickTimes,
+				date,
+				targetSportsCenterUrl,
+				targetSportsCenterHomePath,
+			}) => {
+				return await Promise.all(
+					pickTimes.map(async (time) => {
+						return fetch(
+							`${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&QPid=1196&PT=1&D=${date}&QTime=${time}`,
+						).then((res) => res.text());
+					}),
+				);
+			},
+			{
+				pickTimes,
+				date: nextTargetDate,
+				targetSportsCenterUrl,
+				targetSportsCenterHomePath,
+			},
+		);
 
-    // pick place
-    const pickPlaceResponse = await page.evaluate(
-      async ({
-        pickTimes,
-        date,
-        targetSportsCenterUrl,
-        targetSportsCenterHomePath,
-      }) => {
-        return await Promise.all(
-          pickTimes.map(async (time) => {
-            return fetch(
-              `${targetSportsCenterUrl}${targetSportsCenterHomePath}?module=net_booking&files=booking_place&StepFlag=25&QPid=1196&PT=1&D=${date}&QTime=${time}`,
-            ).then((res) => res.text());
-          }),
-        );
-      },
-      {
-        pickTimes,
-        date: nextTargetDate,
-        targetSportsCenterUrl,
-        targetSportsCenterHomePath,
-      },
-    );
+		console.timeEnd("Used Time");
 
-    // get pick place result path
-    const pickPlaceResultPath = pickPlaceResponse.map((res) => {
-      const path = res.substring(
-        res.indexOf("../../..") + 8,
-        res.indexOf("' </script>"),
-      );
-      return `${targetSportsCenterUrl}${path}`;
-    });
+		// get pick place result path
+		const pickPlaceResultPath = pickPlaceResponse.map((res) => {
+			const path = res.substring(
+				res.indexOf("../../..") + 8,
+				res.indexOf("' </script>"),
+			);
+			return `${targetSportsCenterUrl}${path}`;
+		});
 
-    // get pick place result
-    const pickPlaceResult = await page.evaluate(
-      async ({ pickPlaceResultPath }) => {
-        return await Promise.all(
-          pickPlaceResultPath.map((path) =>
-            fetch(path).then((res) => res.text()),
-          ),
-        );
-      },
-      { pickPlaceResultPath },
-    );
+		// get pick place result
+		const pickPlaceResult = await page.evaluate(
+			async ({ pickPlaceResultPath }) => {
+				return await Promise.all(
+					pickPlaceResultPath.map((path) =>
+						fetch(path).then((res) => res.text()),
+					),
+				);
+			},
+			{ pickPlaceResultPath },
+		);
 
-    pickPlaceResult.forEach(async (res, index) => {
-      if (res.indexOf("預約成功") !== -1) {
-        sendLineMessage(
-          `預約成功🏸🏸🏸 \t\n日期: ${nextTargetDate}\t\n時段: ${pickTimes[index]}`,
-        );
-      } else {
-        sendLineMessage(`預約失敗`);
-      }
-    });
-    await browser.close();
-  } catch (e) {
-    console.log(`Error: ${e}`);
-  }
+		pickPlaceResult.forEach(async (res, index) => {
+			if (res.indexOf("預約成功") !== -1) {
+				sendLineMessage(
+					`預約成功🏸🏸🏸 \t\n日期: ${nextTargetDate}\t\n時段: ${pickTimes[index]}`,
+				);
+			} else {
+				sendLineMessage(`${nextTargetDate}預約失敗`);
+			}
+		});
+		await browser.close();
+	} catch (e) {
+		console.log(`Error: ${e}`);
+	}
 };

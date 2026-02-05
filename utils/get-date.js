@@ -4,9 +4,11 @@ import timezone from "dayjs/plugin/timezone.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
-// 取得下週時間
-export const getNextTargetDate = () => {
+
+export function getToday() {
+	return dayjs().tz("Asia/Taipei").format("YYYY/MM/DD dddd");
+}
+export function getNextTargetDate() {
 	// 取得目前日期
-	console.log(dayjs().tz("Asia/Taipei").format());
-	return dayjs().tz("Asia/Taipei").add(7, "d").format("YYYY/MM/DD");
-};
+	return dayjs().tz("Asia/Taipei").add(8, "d").format("YYYY/MM/DD");
+}
