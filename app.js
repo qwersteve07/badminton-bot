@@ -4,7 +4,6 @@ import { sendLineMessage } from "./utils/line-message.js";
 import "dotenv/config";
 
 const pickTimes = ["20", "21"];
-const nextTargetDate = getNextTargetDate();
 // 中山運動中心
 // const zhongShanSportsCenterUrl = "https://scr.cyc.org.tw/";
 // const zhongShanSportsCenterHomePath = "tp01.aspx";
@@ -19,6 +18,7 @@ export const run = async () => {
   try {
     const browser = await chromium.launch();
     const context = await browser.newContext();
+    const nextTargetDate = getNextTargetDate();
 
     console.log("-------browser launched-------");
     console.log(`today is ${getToday()}`);
@@ -114,3 +114,5 @@ export const run = async () => {
     console.log(`Error: ${e}`);
   }
 };
+
+run();
