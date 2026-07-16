@@ -1,33 +1,28 @@
 import fetch from "node-fetch";
 import "dotenv/config";
 
-const accessToken = process.env.LINE_MESSAGE_PERSONAL_TOKEN;
-const url = "https://api.line.me/v2/bot/message/push";
-const myUserId = "Ud54e94fb5df3e0acedb253e444b4ee9d";
+const notifyToken =
+  process.env.LINE_NOTIFY_PERSONAL_TOKEN ?? process.env.LINE_MESSAGE_PERSONAL_TOKEN;
+const notifyUrl = "https://notify-api.line.me/api/notify";
 
 export const sendLineMessage = async (message) => {
-	const data = JSON.stringify({
-		to: myUserId,
-		messages: [
-			{
-				type: "text",
-				text: message,
-			},
-		],
-	});
+  if (!notifyToken) {
+    console.warn("LINE notification token is missing; skipping notification.");
+    return;
+  }
 
-	const options = {
-		method: "post",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${accessToken}`,
-		},
-		body: data,
-	};
+  const body = new URLSearchParams({ message });
 
-	try {
-		await fetch(url, options);
-	} catch (e) {
-		console.log(e);
-	}
+  const response = await fetch(notifyUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${notifyToken}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(`LINE notify request failed: ${response.status} ${response.statusText}`);
+  }
 };
