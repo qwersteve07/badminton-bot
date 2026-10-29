@@ -2,6 +2,16 @@ function normalizeBaseUrl(baseUrl) {
   return new URL(baseUrl).href;
 }
 
+export function buildLoginUrl({ baseUrl, homePath }) {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  return new URL(`${homePath}?module=login_page&files=login&PT=1`, normalizedBaseUrl).href;
+}
+
+export function buildBookingPageUrl({ baseUrl, homePath }) {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  return new URL(`${homePath}?module=net_booking&files=booking_place&PT=1`, normalizedBaseUrl).href;
+}
+
 export function buildBookingUrl({ baseUrl, homePath, date, time, qpid }) {
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   return new URL(
@@ -40,4 +50,33 @@ export function parseBookingResponse(html) {
   }
 
   return { status: "unknown", reason: "unrecognized-response" };
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function extractQpidFromHtml(html, courtName) {
+  const escapedCourtName = escapeRegExp(courtName);
+  const patterns = [
+    new RegExp(`QPid=(\\d+)[\\s\\S]{0,400}?${escapedCourtName}`, "i"),
+    new RegExp(`${escapedCourtName}[\\s\\S]{0,400}?QPid=(\\d+)`, "i"),
+    new RegExp(`qpid["'\\s:=]+(\\d+)[\\s\\S]{0,400}?${escapedCourtName}`, "i"),
+    new RegExp(`${escapedCourtName}[\\s\\S]{0,400}?qpid["'\\s:=]+(\\d+)`, "i"),
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  const qpidMatches = [...html.matchAll(/QPid=(\d+)/gi)].map((match) => match[1]);
+  const uniqueQpids = [...new Set(qpidMatches)];
+  if (uniqueQpids.length === 1) {
+    return uniqueQpids[0];
+  }
+
+  return null;
 }

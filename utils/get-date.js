@@ -11,8 +11,12 @@ export function getToday() {
   return dayjs().tz(TAIPEI_TZ).format("YYYY/MM/DD dddd");
 }
 
-export function getNextTargetDate(daysAhead = 8) {
-  return dayjs().tz(TAIPEI_TZ).add(daysAhead, "day").format("YYYY/MM/DD");
+export function getNextTargetDate(daysAhead = 8, reference = Date.now()) {
+  return dayjs(reference).tz(TAIPEI_TZ).add(daysAhead, "day").format("YYYY/MM/DD");
+}
+
+export function getNextMidnight(reference = Date.now()) {
+  return dayjs(reference).tz(TAIPEI_TZ).startOf("day").add(1, "day").valueOf();
 }
 
 export function getReleaseMoment(fireOffsetMs = 0) {
